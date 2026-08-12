@@ -2,8 +2,8 @@ const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require
 const { Rcon } = require('samp-rcon');
 
 // COLE AQUI SUAS INFORMAÇÕES:
-const TOKEN = 'MTUzNzA1MzE5OTk1MTk4Njc0OA.GZQenl.a17_Yiml-7XkSAwflZPHSNSb_cHqelMmpVOslY';
-const CLIENT_ID = '1537053199951986748';
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
 // Dados RCON do seu servidor na LemeHost (pegue no painel deles)
 const rcon = new Rcon({
