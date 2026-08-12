@@ -1,12 +1,13 @@
 {
   "name": "bot-whitelist",
   "version": "1.0.0",
+  "description": "Bot Discord Whitelist SA-MP",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "samp-rcon": "^1.1.2"
+    "rcon-client": "^4.2.2"
   }
 }

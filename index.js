@@ -1,50 +1,34 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
-const { Rcon } = require('samp-rcon');
+const { Rcon } = require('rcon-client');
 
-// Pega as chaves confidenciais da "caixa forte" do Render
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-
-// Configuração da conexão RCON com o servidor da LemeHost via variáveis de ambiente
-const rcon = new Rcon({
-    host: process.env.RCON_HOST,
-    port: parseInt(process.env.RCON_PORT),
-    password: process.env.RCON_PASSWORD
-});
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once('ready', async () => {
     console.log(`Bot online como ${client.user.tag}!`);
 
-    // Definindo os comandos /addwhitelist e /removerwhitelist
     const commands = [
         new SlashCommandBuilder()
             .setName('addwhitelist')
-            .setDescription('Adiciona um nick à whitelist do servidor')
-            .addStringOption(option =>
-                option.setName('nick')
-                    .setDescription('Nick do jogador')
-                    .setRequired(true)),
+            .setDescription('Adiciona um nick à whitelist')
+            .addStringOption(option => option.setName('nick').setDescription('Nick').setRequired(true)),
         new SlashCommandBuilder()
             .setName('removerwhitelist')
-            .setDescription('Remove um nick da whitelist do servidor')
-            .addStringOption(option =>
-                option.setName('nick')
-                    .setDescription('Nick do jogador')
-                    .setRequired(true))
+            .setDescription('Remove um nick da whitelist')
+            .addStringOption(option => option.setName('nick').setDescription('Nick').setRequired(true))
     ].map(command => command.toJSON());
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log('Comandos de whitelist registrados no Discord com sucesso!');
+        console.log('Comandos registrados!');
     } catch (error) {
         console.error(error);
     }
 });
 
-// Ações executadas quando alguém usa o comando no Discord
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -52,25 +36,24 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
 
     try {
-        // Conecta no servidor da LemeHost via RCON
-        await rcon.connect();
+        const rcon = await Rcon.connect({
+            host: process.env.RCON_HOST,
+            port: parseInt(process.env.RCON_PORT),
+            password: process.env.RCON_PASSWORD
+        });
 
         if (interaction.commandName === 'addwhitelist') {
-            // Executa o comando exato do seu servidor SA-MP
-            await rcon.execute(`addwhiteliste ${nick}`);
-            await interaction.editReply(`Sucesso! O nick **${nick}** foi adicionado à whitelist.`);
-        } 
-        else if (interaction.commandName === 'removerwhitelist') {
-            await rcon.execute(`removerwhitelist ${nick}`);
-            await interaction.editReply(`Sucesso! O nick **${nick}** foi removido da whitelist.`);
+            await rcon.send(`addwhiteliste ${nick}`);
+            await interaction.editReply(`Sucesso! Nick **${nick}** adicionado à whitelist.`);
+        } else if (interaction.commandName === 'removerwhitelist') {
+            await rcon.send(`removerwhitelist ${nick}`);
+            await interaction.editReply(`Sucesso! Nick **${nick}** removido da whitelist.`);
         }
 
-        // Fecha a conexão RCON após enviar o comando
-        await rcon.disconnect();
-
+        await rcon.end();
     } catch (error) {
         console.error(error);
-        await interaction.editReply(`Erro ao conectar via RCON com o servidor. Verifique se a LemeHost está ligada.`);
+        await interaction.editReply(`Erro ao conectar no RCON do servidor.`);
     }
 });
 
